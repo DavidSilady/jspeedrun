@@ -169,6 +169,33 @@ async function startServer() {
         }
     })
 
+    app.post('/update_orders', function (req, res){
+        ;(async () => {
+            // note: we don't try/catch this because if connecting throws an exception
+            // we don't need to dispose of the client (it will be undefined)
+            const idArray = req.body.idArray
+            if (idArray.length <= 0) return res.status(200).json("Empty array.")
+            const client = await pool.connect()
+            try {
+                await client.query('BEGIN')
+                let id
+                for (id of idArray) {
+                    const query = `UPDATE public.orders SET state = true WHERE id = $1`
+                    await client.query(query, [parseInt(id)])
+                }
+
+                await client.query('COMMIT')
+                res.status(200).json({msg: "Order update successful!"})
+            } catch (e) {
+                await client.query('ROLLBACK')
+                console.log(e)
+                res.status(500).json({msg: "Something went wrong, please try again later."})
+            } finally {
+                client.release()
+            }
+        })().catch(e => console.error(e.stack))
+    })
+
     app.get('/ad_clicks', async function (req, res) {
         try {
             const result = await pool.query(`SELECT currval('ad_hit_counter')`)

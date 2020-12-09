@@ -1,7 +1,7 @@
 import React, {useEffect} from "react"
 import {BasicLoader, FullPageMessage} from "./HomePage";
 import { DataGrid } from '@material-ui/data-grid'
-import {getData} from "../ClientCalls";
+import {getData, postData} from "../ClientCalls";
 import {Button, Typography} from "@material-ui/core";
 
 
@@ -10,6 +10,7 @@ export function AdminPage() {
     const [orders, setOrders] = React.useState([])
     const [isLoaded, setIsLoaded] = React.useState(true)
     const [clickCount, setClickCount] = React.useState(null)
+    const [selection, setSelection] = React.useState([])
 
     useEffect(() => {
         getData('/orders').then(
@@ -35,6 +36,26 @@ export function AdminPage() {
         )
     }
 
+    function handlePayed() {
+        if (selection.length > 0) {
+            postData('/update_orders', {idArray: selection}).then(
+                (res) => {
+                    console.log(res.msg)
+                    const ordersCopy = [...orders]
+                    ordersCopy.forEach(order => {
+                        if (selection.some(s => parseInt(s) === order.id)) {
+                            order.state = true;
+                        }
+                    })
+                    setOrders(ordersCopy)
+                    setSelection([])
+                }, (err) => {
+                    console.log(err)
+                }
+            )
+        }
+    }
+
     const columns = [
         {field: "id", headerName: "ID"},
         {field: "state", headerName: "State", description: "Is done?"},
@@ -56,11 +77,16 @@ export function AdminPage() {
     } else {
         return (
             <div>
-                <div style={{ height: 400, width: '100%' }}>
-                    <DataGrid rows={orders} columns={columns} pageSize={5} />
+                <div style={{ height: 600, width: '100%' }}>
+                    <DataGrid
+                        onSelectionChange={(newSelection) => {
+                            setSelection(newSelection.rowIds);
+                        }}
+                        rows={orders} columns={columns} pageSize={10} checkboxSelection />
                 </div>
                 <div>
                     <Button color={"primary"} variant={"contained"} onClick={getAdClickCount}>Get Ad Click Count</Button>
+                    <Button color={"primary"} variant={"contained"} onClick={handlePayed}>Mark as paid</Button>
                     <Button color={"secondary"} variant={"contained"} href={"/"}>Home</Button>
                     <Typography>Ad click count: {clickCount}</Typography>
                 </div>
