@@ -9,37 +9,36 @@ const cookieParser = require('cookie-parser')
 const Pool = require('pg').Pool
 
 
-
-
-
 async function startServer() {
     let tries = 10
     let pool
+    await new Promise(res => setTimeout(res, 20000)).catch(e => {})
     while (tries) {
         try {
-            pool = new Pool({
-                user: 'postgres',
-                host: 'localhost',
-                database: 'postgres',
-                password: 'postgres',
-                port: 5432,
-            })
+            pool = new Pool()
+            console.log('DB set up')
             break
-        } catch (e) {
-            console.log(e)
-            await new Promise(res => setTimeout(res, 5000))
+        } catch (err) {
+            console.log(err)
+            await new Promise(res => setTimeout(res, 5000)).catch(e => {})
             tries -= 1
         }
         console.log(`Tries left: ${tries}`)
     }
-    console.log('DB set up')
+    console.log('Moving on. . ')
 
     const IS_HTTPS = false
     const PORT = 8080
     const COOKIE_AGE = 1000 * 60 * 60 * 24 * 30 // 30 days
 
     const app = express()
-    await pool.query(`SELECT nextval('ad_hit_counter')`)
+    try {
+        //init value
+        await pool.query(`SELECT nextval('ad_hit_counter')`)
+    } catch (e) {
+        console.log(e)
+    }
+
 
     //development only
     // app.use((req, res, next) => {
