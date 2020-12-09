@@ -14,14 +14,7 @@ export function AdminPage() {
     useEffect(() => {
         getData('/orders').then(
             (res) => {
-                console.log(res.data)
-                const copy = res.data.map(item => (
-                    {
-                        id: item.id.toString(),
-                        ...item
-                    }
-                ))
-                setOrders(copy)
+                setOrders(res.data)
                 setIsLoaded(true)
             },
             (err) => {
@@ -75,5 +68,4 @@ export function AdminPage() {
 
         )
     }
-
 }

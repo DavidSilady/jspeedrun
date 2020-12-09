@@ -39,18 +39,18 @@ async function startServer() {
     const COOKIE_AGE = 1000 * 60 * 60 * 24 * 30 // 30 days
 
     const app = express()
+    await pool.query(`SELECT nextval('ad_hit_counter')`)
 
-
-//development only
-    app.use((req, res, next) => {
-        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
-        res.setHeader('Access-Control-Allow-Credentials', true)
-        res.setHeader(
-            'Access-Control-Allow-Headers',
-            'Origin, X-Requested-Width, Content-Type, Accept, Authorization')
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS, PUT')
-        next()
-    })
+    //development only
+    // app.use((req, res, next) => {
+    //     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+    //     res.setHeader('Access-Control-Allow-Credentials', true)
+    //     res.setHeader(
+    //         'Access-Control-Allow-Headers',
+    //         'Origin, X-Requested-Width, Content-Type, Accept, Authorization')
+    //     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS, PUT')
+    //     next()
+    // })
 
     const sessionParser = session({
         secret: 'key',
@@ -192,6 +192,11 @@ async function startServer() {
             res.status(500).json({msg: "Something went wrong."})
             console.log(e)
         }
+    })
+
+    //For React Browser Routing
+    app.get('*', function (req, res) {
+        res.status(200).sendFile('./build/index.html', {root: __dirname})
     })
 
     //LISTEN
